@@ -1,3 +1,11 @@
 .DS_Store
 .Geospatial File Measurement API
 .claude/
+CLAUDE.md
+docs/agents/
+.scratch/
+graphify-out/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
