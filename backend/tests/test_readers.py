@@ -82,6 +82,17 @@ def test_zip_with_two_shapefiles_is_rejected(shapefile_dir, tmp_path):
         read_features(path)
 
 
+def test_macos_metadata_in_zip_is_ignored(shapefile_dir, tmp_path):
+    path = zip_dir(shapefile_dir, tmp_path / "pits.zip")
+    with zipfile.ZipFile(path, "a") as zf:
+        # What Finder's "Compress" adds next to the real files.
+        zf.writestr("__MACOSX/survey/._pits.shp", b"mac resource fork")
+
+    gdf = read_features(path)
+
+    assert list(gdf["name"]) == ["Pit A"]
+
+
 @pytest.mark.parametrize(
     ("name", "content", "message"),
     [
