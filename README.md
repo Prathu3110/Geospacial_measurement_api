@@ -299,4 +299,5 @@ I can explain any part of the code and the reasons behind it.
 
 - A job queue (RQ or Celery) with retries, so a server restart can't leave a file stuck in `PROCESSING`.
 - More upload formats: KMZ, GeoJSON and GeoPackage. GDAL already reads them, so the work is mostly validation and tests.
+- CSV import, with either latitude and longitude columns for points or a WKT geometry column, plus a required CRS column or parameter, since CSV has no `.prj` equivalent.
 - Special cases the per-feature UTM choice doesn't cover yet: features that cross the antimeridian, and very large features that span several zones, where geodesic area would suit them better.
