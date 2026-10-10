@@ -6,7 +6,7 @@ A small web page is included for trying it out (not required by the brief; the A
 
 **Live demo:** https://geomeasure-web.onrender.com (free hosting: the first request after 15 idle minutes takes about a minute while the server wakes up).
 
-![Web page after uploading the KML sample: totals, the features on a map with one selected, its details beside the map, and the measurements table below](docs/screenshot.png)
+![Web page after uploading Sample 1 (KML): totals, the features on a map with one selected, its details beside the map, and the measurements table below](docs/screenshot.png)
 
 ## Setup
 
@@ -24,10 +24,10 @@ docker compose up --build
 | http://localhost:8000/docs | Interactive API documentation (Swagger UI) |
 | http://localhost:8000/health | Health check, includes the PostGIS version |
 
-The API applies database migrations when it starts. Two sample files are in [`frontend/public/samples/`](frontend/public/samples/). The web page can upload them with one click:
+The API applies database migrations when it starts. Two sample files, made for this project, are in [`frontend/public/samples/`](frontend/public/samples/). The web page can upload them with one click:
 
-- `bengaluru-site.kml`: a polygon, a line with altitude, and a point, in two KML folders, in EPSG:4326.
-- `bellary-pits-utm43n.zip`: a Shapefile with two polygons that is already projected (EPSG:32643). The polygons measure exactly 1,000,000 m² and 100,000 m².
+- `sample-1.kml`: a polygon, a line with altitude, and a point, in two KML folders, in EPSG:4326.
+- `sample-2.zip`: a Shapefile with two polygons that is already projected (EPSG:32643). The polygons measure exactly 1,000,000 m² and 100,000 m².
 
 ### Running the backend without Docker
 
@@ -54,13 +54,13 @@ The frontend runs with `cd frontend && npm install && npm run dev`, and proxies 
 ### Upload
 
 ```bash
-curl -F "file=@frontend/public/samples/bengaluru-site.kml" http://localhost:8000/api/files/
+curl -F "file=@frontend/public/samples/sample-1.kml" http://localhost:8000/api/files/
 ```
 
 ```json
 {
   "id": "ddb54dbd-bcef-49f6-9ca0-f562807115c2",
-  "filename": "bengaluru-site.kml",
+  "filename": "sample-1.kml",
   "status": "PENDING",
   "crs": null,
   "feature_count": null,

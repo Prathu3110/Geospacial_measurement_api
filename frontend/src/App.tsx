@@ -15,8 +15,8 @@ import {
 const REPO_URL = 'https://github.com/Prathu3110/Geospacial_measurement_api'
 
 const SAMPLES = [
-  { file: 'bengaluru-site.kml', title: 'Bengaluru site', detail: 'KML with a polygon, a line and a point' },
-  { file: 'bellary-pits-utm43n.zip', title: 'Bellary pits', detail: 'Shapefile already projected to UTM 43N' },
+  { file: 'sample-1.kml', title: 'Sample 1', detail: 'KML with a polygon, a line and a point' },
+  { file: 'sample-2.zip', title: 'Sample 2', detail: 'Shapefile already projected to UTM 43N' },
 ]
 
 // The OSM basemap is light in both themes, so the highlight is one fixed colour that stands out
