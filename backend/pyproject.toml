@@ -7,8 +7,15 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.20.0",
     "fastapi>=0.143.0",
+    "geoalchemy2>=0.20.0",
+    "geopandas>=1.2.0",
     "psycopg[binary]>=3.3.6",
+    "pyogrio>=0.13.0",
+    "pyproj>=3.8.0",
+    "python-multipart>=0.0.32",
+    "shapely>=2.2.0",
     "sqlalchemy>=2.1.4",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -18,7 +25,7 @@ package = false
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
+    "httpx2>=2.13.1",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
@@ -28,3 +35,10 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+# The local alembic/ migrations folder would otherwise make ruff treat the package as first-party.
+known-third-party = ["alembic"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
