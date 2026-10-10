@@ -1,0 +1,36 @@
+# Render Blueprint: the API as a Docker web service, the frontend as a static site.
+# The database is external (Neon), because Render's free Postgres expires after 30 days.
+services:
+  - type: web
+    name: geomeasure-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # paste the Neon connection string in the Render dashboard
+      - key: PORT
+        value: "8000"
+
+  - type: web
+    name: geomeasure-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    # Same-origin proxy, like nginx in docker-compose. If Render gives the API a different
+    # hostname (e.g. geomeasure-api-x1y2.onrender.com), update these three destinations.
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://geomeasure-api.onrender.com/api/*
+      - type: rewrite
+        source: /docs
+        destination: https://geomeasure-api.onrender.com/docs
+      - type: rewrite
+        source: /openapi.json
+        destination: https://geomeasure-api.onrender.com/openapi.json
+      - type: rewrite
+        source: /*
+        destination: /index.html
