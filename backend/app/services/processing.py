@@ -14,6 +14,9 @@ from app.services.readers import InvalidUpload, read_features
 
 log = logging.getLogger(__name__)
 
+# Values LIBKML fills in for placemarks that don't set them; they say nothing about the feature.
+KML_DEFAULTS = {"extrude": 0, "tessellate": -1, "visibility": -1}
+
 
 def process_file(file_id: uuid.UUID, path: Path) -> None:
     """Read, measure and store every feature. Runs after the upload response is sent."""
@@ -25,7 +28,7 @@ def process_file(file_id: uuid.UUID, path: Path) -> None:
         try:
             gdf = read_features(path)
             measurements = measure_features(gdf)
-            properties = _properties(gdf)
+            properties = _properties(gdf, kml=path.suffix.lower() == ".kml")
             wgs84 = gdf.geometry.to_crs(4326)
 
             for i, (geom, m) in enumerate(zip(wgs84, measurements, strict=True)):
@@ -64,9 +67,13 @@ def _crs_label(crs: CRS) -> str:
     return f"EPSG:{epsg}" if epsg else crs.name
 
 
-def _properties(gdf) -> list[dict]:
+def _properties(gdf, kml: bool) -> list[dict]:
     # pandas' JSON encoder turns NaN/NaT/numpy types into JSON-safe values in one step.
     table = gdf.drop(columns=gdf.geometry.name)
     rows = json.loads(table.to_json(orient="records", date_format="iso"))
     # LIBKML adds many always-empty columns (drawOrder, icon, ...); drop nulls to keep it readable.
-    return [{k: v for k, v in row.items() if v is not None} for row in rows]
+    defaults = KML_DEFAULTS if kml else {}
+    return [
+        {k: v for k, v in row.items() if v is not None and defaults.get(k, object()) != v}
+        for row in rows
+    ]

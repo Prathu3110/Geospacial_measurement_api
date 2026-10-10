@@ -32,11 +32,14 @@ def _read_kml(path: Path) -> gpd.GeoDataFrame:
     # Each KML <Folder> becomes its own layer; reading only the first would silently drop features.
     try:
         layers = pyogrio.list_layers(path)[:, 0]
-        frames = [gpd.read_file(path, layer=name).assign(layer=name) for name in layers]
+        frames = [gpd.read_file(path, layer=name) for name in layers]
     except (DataSourceError, DataLayerError) as exc:
         raise InvalidUpload("could not parse KML") from exc
     if not frames:
         raise InvalidUpload("KML contains no layers")
+    # A KML without folders has one layer named after the (temporary) file, which means nothing.
+    if len(frames) > 1:
+        frames = [f.assign(layer=name) for f, name in zip(frames, layers, strict=True)]
     return pd.concat(frames, ignore_index=True)
 
 

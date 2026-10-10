@@ -58,6 +58,19 @@ def test_kml_reads_features_from_every_folder(tmp_path):
     assert gdf.loc[0, "owner"] == "Client X"
 
 
+def test_kml_without_folders_has_no_layer_property(tmp_path):
+    path = tmp_path / "plain.kml"
+    path.write_text(
+        '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
+        "<Placemark><name>Marker</name><Point><coordinates>77.59,12.97</coordinates></Point>"
+        "</Placemark></Document></kml>"
+    )
+
+    gdf = read_features(path)
+
+    assert "layer" not in gdf.columns
+
+
 def test_shapefile_zip_keeps_its_projected_crs(shapefile_dir, tmp_path):
     gdf = read_features(zip_dir(shapefile_dir, tmp_path / "pits.zip"))
 

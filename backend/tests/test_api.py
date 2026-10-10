@@ -40,9 +40,7 @@ def test_kml_upload_is_processed_and_measured(client):
     assert pit["geometry_type"] == "Polygon"
     assert pit["measurement_crs"] == "EPSG:32643"
     assert pit["area_ha"] == pytest.approx(pit["area_m2"] / 10_000)
-    assert {"Name": "Pit A", "owner": "Client X", "layer": "Pits"}.items() <= pit[
-        "properties"
-    ].items()
+    assert pit["properties"] == {"Name": "Pit A", "owner": "Client X", "layer": "Pits"}
     assert road["length_km"] == pytest.approx(road["length_m"] / 1_000)
     assert marker["reason"] == "no measurement for Point"
     assert marker["area_m2"] is None and marker["length_m"] is None

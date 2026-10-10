@@ -2,11 +2,11 @@
 
 A FastAPI service that accepts a KML file or a zipped Shapefile, extracts every feature, and reports the area of each polygon and the length of each line in metres. Each feature is measured in the UTM zone where it lies, never in degrees.
 
-A small web page is included for trying it out (not required by the brief; the API is the deliverable). Upload a file or one of two samples, see each feature on a map with totals in ha, km² and km, and click a shape to jump to its row in the measurements table.
+A small web page is included for trying it out (not required by the brief; the API is the deliverable). Upload a file or one of two samples, see each feature on a map with totals in ha, km² and km, click a shape (or a table row) to see its measurements and properties, and download the results as CSV.
 
 **Live demo:** https://geomeasure-web.onrender.com (free hosting: the first request after 15 idle minutes takes about a minute while the server wakes up).
 
-![Web page after uploading the Shapefile sample: two pits measured at 100 ha and 10 ha, drawn on the map, with the measurements table below](docs/screenshot.png)
+![Web page after uploading the KML sample: totals, the features on a map with one selected, its details beside the map, and the measurements table below](docs/screenshot.png)
 
 ## Setup
 
