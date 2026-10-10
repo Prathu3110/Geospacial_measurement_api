@@ -186,16 +186,14 @@ Routes deal only with HTTP. The services hold the logic. `measurement.py` has no
 
 ## Design decisions
 
-<!-- TODO(Prathu): rewrite this section in your own words before submitting. -->
 
-- **FastAPI rather than Django REST Framework.** The service has three or four endpoints and no admin or auth needs. FastAPI's typed request handling and generated OpenAPI documentation fit that better than a full Django project.
-- **UTM per feature, rather than one CRS per file or geodesic area.** UTM is the standard working CRS in surveying, it satisfies the brief's "transform to a projected CRS", and its error stays below 0.2%. A single CRS per file would break for files that span zones. Geodesic area with `pyproj.Geod` is a valid alternative that is slightly more accurate, so the tests use it as the reference.
-- **PostgreSQL with PostGIS rather than SQLite.** Geometries are stored as real spatial types, the map endpoint uses `ST_AsGeoJSON`, and the tests cross-check areas with `ST_Area(geography)`. Docker Compose removes the setup cost.
-- **FastAPI BackgroundTasks rather than Celery or RQ.** Uploads return immediately with a status to poll, without adding a broker or worker container. The limit: a restart in the middle of processing leaves that file stuck in `PROCESSING`. A real job queue is the next step if files get large or the API runs on several machines.
-- **Reject a missing `.prj` rather than assume EPSG:4326.** A clear failure is better than a plausible wrong number.
-- **One bad feature doesn't fail the file.** Unsupported or invalid geometries get `null` plus a `reason`, as the brief asks ("handle it gracefully").
-- **Alembic migrations** rather than `create_all`, so the schema can change without losing data. The tests run the real migration.
-
+- **FastAPI over Django REST Framework:** The API only needs a few endpoints, so FastAPI's built-in validation and OpenAPI docs are enough without the extra Django setup.
+- **UTM per feature:** Each feature uses its appropriate UTM zone for area calculations. Tests use `pyproj.Geod` as a reference to cross-check the results.
+- **PostgreSQL + PostGIS over SQLite:** Native geometry types, `ST_AsGeoJSON`, and `ST_Area(geography)` make spatial operations straightforward. Docker Compose simplifies setup.
+- **BackgroundTasks over Celery/RQ:** Keeps file processing asynchronous without a separate broker. The trade-off is that a restart can leave jobs stuck in `PROCESSING`.
+- **Reject missing `.prj` files:** Avoids assuming the wrong CRS and returning misleading results.
+- **Handle invalid features individually:** Invalid geometries return `null` with a `reason` instead of failing the entire file.
+- **Alembic over `create_all()`:** Keeps schema changes versioned, and tests run the actual migrations.
 ## Testing
 
 ```bash
@@ -228,5 +226,4 @@ PostGIS and the Python geospatial libraries (GeoPandas, Shapely, pyproj, GDAL) w
 
 - A job queue (RQ or Celery) with retries, so a server restart can't leave a file stuck in `PROCESSING`.
 - More upload formats: KMZ, GeoJSON and GeoPackage. GDAL already reads them, so the work is mostly validation and tests.
-- CSV import, with either latitude and longitude columns for points or a WKT geometry column, plus a required CRS column or parameter, since CSV has no `.prj` equivalent.
 - Special cases the per-feature UTM choice doesn't cover yet: features that cross the antimeridian, and very large features that span several zones, where geodesic area would suit them better.
