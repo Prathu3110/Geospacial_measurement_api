@@ -40,6 +40,14 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [selected, setSelected] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (selected === null) return
+    document
+      .getElementById(`feature-${selected}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [selected])
 
   async function process(chosen: File) {
     setBusy(true)
@@ -47,6 +55,7 @@ export default function App() {
     setFile(null)
     setPage(null)
     setFeatures(null)
+    setSelected(null)
     try {
       let info = await uploadFile(chosen)
       setFile(info)
@@ -180,6 +189,11 @@ export default function App() {
             style={HIGHLIGHT}
             // Circles instead of Leaflet's default pin images, which Vite builds don't bundle.
             pointToLayer={(_, latlng) => circleMarker(latlng, { ...HIGHLIGHT, radius: 7 })}
+            // Clicking a shape jumps to its row in the table below.
+            onEachFeature={(feature, layer) => {
+              layer.on('click', () => setSelected(Number(feature.id)))
+              layer.bindTooltip(`Feature ${feature.id}: click for details`, { sticky: true })
+            }}
           />
           <FitBounds data={features} />
         </MapContainer>
@@ -203,7 +217,11 @@ export default function App() {
             </thead>
             <tbody>
               {page.items.map((m) => (
-                <tr key={m.feature_index}>
+                <tr
+                  key={m.feature_index}
+                  id={`feature-${m.feature_index}`}
+                  className={m.feature_index === selected ? 'selected' : undefined}
+                >
                   <td>{m.feature_index}</td>
                   <td>{m.geometry_type}</td>
                   <td>{m.measurement_crs ?? '-'}</td>

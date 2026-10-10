@@ -281,6 +281,10 @@ th {
   font-weight: 500;
 }
 
+tbody tr.selected td {
+  background: var(--warn-bg);
+}
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
