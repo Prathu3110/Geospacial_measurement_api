@@ -164,48 +164,9 @@ This returns a standard GeoJSON `FeatureCollection`. Each feature's `id` is its 
 
 Three containers, started together by Docker Compose:
 
-```mermaid
-flowchart LR
-    browser(["Browser"])
-    client(["API client<br/>curl or Swagger UI"])
+![Architecture: browser and API clients call the FastAPI service, which stores files and features in PostGIS and processes uploads in a background task](docs/architecture.svg)
 
-    subgraph web["web container: nginx"]
-        spa["React + Leaflet page<br/>upload, map, table"]
-    end
-
-    subgraph api["api container: FastAPI"]
-        direction TB
-        routes["api/files.py<br/>HTTP endpoints"]
-        processing["services/processing.py<br/>background task"]
-        readers["services/readers.py<br/>KML or zipped Shapefile"]
-        measurement["services/measurement.py<br/>UTM zone per feature"]
-        routes -->|schedules| processing
-        processing --> readers
-        processing --> measurement
-    end
-
-    subgraph db["db container: PostgreSQL + PostGIS"]
-        direction TB
-        files[("uploaded_files<br/>status, CRS, feature count")]
-        features[("features<br/>geometry in EPSG:4326,<br/>properties, area, length")]
-    end
-
-    browser --> spa
-    spa -->|"/api/* proxied"| routes
-    client --> routes
-    routes <-->|"read and write"| db
-    processing -->|"write features, set status"| db
-
-    classDef ext fill:#fbf3db,stroke:#956400,color:#2f3437
-    classDef svc fill:#e1f3fe,stroke:#1f6c9f,color:#2f3437
-    classDef store fill:#edf3ec,stroke:#346538,color:#2f3437
-    class browser,client ext
-    class spa,routes,processing,readers,measurement svc
-    class files,features store
-    style web fill:#fbfbfa,stroke:#cfcfcd
-    style api fill:#fbfbfa,stroke:#cfcfcd
-    style db fill:#fbfbfa,stroke:#cfcfcd
-```
+The diagram source is [`docs/architecture.tex`](docs/architecture.tex) (TikZ).
 
 ```
 backend/
