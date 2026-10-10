@@ -2,7 +2,12 @@
 
 A FastAPI service that accepts a KML file or a zipped Shapefile, extracts every feature, and reports the area of each polygon and the length of each line in metres. Each feature is measured in the UTM zone where it lies, never in degrees.
 
-A small web page is included for trying it out: upload a file, then see the features on a map with a table of measurements.
+A small web page is included for trying it out. It isn't required by the brief; the API is the deliverable. On the page you can:
+
+- upload a file by choosing it or dropping it, or upload one of the two sample files with one click
+- watch the processing status, then see the feature count, the source CRS, and the total area and length
+- see every feature drawn on an OpenStreetMap map, with polygons and lines outlined and points shown as circles
+- hover a shape to identify it, and click it to jump to its row in the measurements table, which is highlighted
 
 **Live demo:** <!-- TODO: add the Render URL --> (free hosting: the first request after 15 idle minutes takes about a minute while the server wakes up).
 
