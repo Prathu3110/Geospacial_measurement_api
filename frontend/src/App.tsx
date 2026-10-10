@@ -167,7 +167,10 @@ export default function App() {
               </div>
               <div>
                 <dt>Total area</dt>
-                <dd>{fmt(totalArea, 2)} ha</dd>
+                <dd>
+                  {fmt(totalArea, 2)} ha
+                  <span className="sub">{fmt(totalArea / 100, 4)} km²</span>
+                </dd>
               </div>
               <div>
                 <dt>Total length</dt>

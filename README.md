@@ -2,12 +2,9 @@
 
 A FastAPI service that accepts a KML file or a zipped Shapefile, extracts every feature, and reports the area of each polygon and the length of each line in metres. Each feature is measured in the UTM zone where it lies, never in degrees.
 
-A small web page is included for trying it out. It isn't required by the brief; the API is the deliverable. On the page you can:
+A small web page is included for trying it out (not required by the brief; the API is the deliverable). Upload a file or one of two samples, see each feature on a map with totals in ha, km² and km, and click a shape to jump to its row in the measurements table.
 
-- upload a file by choosing it or dropping it, or upload one of the two sample files with one click
-- watch the processing status, then see the feature count, the source CRS, and the total area and length
-- see every feature drawn on an OpenStreetMap map, with polygons and lines outlined and points shown as circles
-- hover a shape to identify it, and click it to jump to its row in the measurements table, which is highlighted
+<!-- TODO(Prathu): add a screenshot, e.g. ![Web page after uploading the KML sample](docs/screenshot.png) -->
 
 **Live demo:** <!-- TODO: add the Render URL --> (free hosting: the first request after 15 idle minutes takes about a minute while the server wakes up).
 
@@ -16,8 +13,8 @@ A small web page is included for trying it out. It isn't required by the brief; 
 You need Docker with Docker Compose.
 
 ```bash
-git clone https://github.com/Prathu3110/Geospatial_measurement.git
-cd Geospatial_measurement
+git clone https://github.com/Prathu3110/Geospacial_measurement_api.git
+cd Geospacial_measurement_api
 docker compose up --build
 ```
 
@@ -44,16 +41,6 @@ uv run pytest                    # needs the db container; creates its own geome
 ```
 
 The frontend runs with `cd frontend && npm install && npm run dev`, and proxies `/api` to port 8000.
-
-## Deployment
-
-`render.yaml` is a Render Blueprint. It defines the API as a Docker web service and the frontend as a static site, and the static site proxies `/api/*` to the API so the browser sees one origin. The database is a free Neon Postgres with PostGIS. To deploy your own copy:
-
-1. Create a Neon project and copy its connection string.
-2. In Render, choose New > Blueprint and select this repository.
-3. Paste the connection string as `DATABASE_URL` when Render asks for it.
-
-The API runs its migrations on start, and the migration enables the `postgis` extension.
 
 ## API
 
@@ -82,27 +69,7 @@ curl -F "file=@frontend/public/samples/bengaluru-site.kml" http://localhost:8000
 }
 ```
 
-Wrong extension: `400`. Larger than 50 MB: `413`. Processing happens after the response is sent, so poll the file endpoint until `status` is `COMPLETED` or `FAILED`.
-
-### File information
-
-```bash
-curl http://localhost:8000/api/files/ddb54dbd-bcef-49f6-9ca0-f562807115c2/
-```
-
-```json
-{
-  "id": "ddb54dbd-bcef-49f6-9ca0-f562807115c2",
-  "filename": "bengaluru-site.kml",
-  "status": "COMPLETED",
-  "crs": "EPSG:4326",
-  "feature_count": 3,
-  "error": null,
-  "created_at": "2026-10-10T12:08:02.704110"
-}
-```
-
-A file that can't be read ends up `FAILED` with a reason in `error`, for example `"Shapefile is missing required parts: .prj"`. Unknown id: `404`.
+Wrong extension: `400`. Larger than 50 MB: `413`. Processing happens after the response is sent, so poll `GET /api/files/{id}/` until `status` is `COMPLETED` (with `crs` and `feature_count` filled in) or `FAILED` (with a reason in `error`, for example `"Shapefile is missing required parts: .prj"`). Unknown id: `404`.
 
 ### Measurements
 
@@ -130,17 +97,6 @@ curl "http://localhost:8000/api/files/ddb54dbd-bcef-49f6-9ca0-f562807115c2/measu
       "properties": {"Name": "Pit A", "layer": "Pits", "owner": "Client X"}
     },
     {
-      "feature_index": 1,
-      "geometry_type": "LineString",
-      "measurement_crs": "EPSG:32643",
-      "area_m2": null,
-      "area_ha": null,
-      "length_m": 3938.045,
-      "length_km": 3.938,
-      "reason": null,
-      "properties": {"Name": "Haul road", "layer": "Roads"}
-    },
-    {
       "feature_index": 2,
       "geometry_type": "Point",
       "measurement_crs": null,
@@ -155,7 +111,7 @@ curl "http://localhost:8000/api/files/ddb54dbd-bcef-49f6-9ca0-f562807115c2/measu
 }
 ```
 
-Numbers are shortened here, and some KML styling properties are left out. A file that is not `COMPLETED` returns `409`.
+Shortened: the line feature (with `length_m` and `length_km`) and some KML styling properties are left out. A file that is not `COMPLETED` returns `409`.
 
 ### Features (GeoJSON)
 
@@ -163,7 +119,7 @@ Numbers are shortened here, and some KML styling properties are left out. A file
 curl http://localhost:8000/api/files/ddb54dbd-bcef-49f6-9ca0-f562807115c2/features/
 ```
 
-This returns a standard GeoJSON `FeatureCollection`. Each feature's `id` is its `feature_index`, and its properties include the measurements. Geometry is kept out of the measurements response so that response stays small. The feature ID, geometry type, geometry, CRS and properties required by the brief are all available between the two endpoints.
+Returns a GeoJSON `FeatureCollection` with each feature's geometry, its `feature_index` as `id`, and its measurements in the properties. Geometry is kept out of the measurements response so that response stays small.
 
 ## Architecture
 
@@ -195,34 +151,6 @@ docker-compose.yml       db (PostGIS), api, web
 Routes deal only with HTTP. The services hold the logic. `measurement.py` has no database or HTTP code, so it is tested with plain in-memory geometries.
 
 ### File-processing flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as Client
-    participant A as FastAPI
-    participant T as Background task
-    participant G as GDAL, GeoPandas, pyproj
-    participant D as PostGIS
-
-    U->>A: POST /api/files/ (.kml or .zip)
-    A->>A: check extension, stream to temp file (max 50 MB)
-    A->>D: insert uploaded_files (PENDING)
-    A-->>U: 202 Accepted with id
-    A->>T: start processing
-    T->>D: status PROCESSING
-    T->>G: read features, validate .prj and zip contents
-    G-->>T: GeoDataFrame in source CRS
-    T->>G: reproject each feature to its UTM zone, measure
-    G-->>T: area in m², length in m, or a reason
-    T->>D: insert features (geometry in EPSG:4326)
-    T->>D: status COMPLETED, or FAILED with error
-    U->>A: GET /api/files/{id}/ (poll)
-    A-->>U: status
-    U->>A: GET /api/files/{id}/measurements/
-    A->>D: select features page
-    A-->>U: measurements
-```
 
 1. `POST /api/files/` checks the extension, streams the upload to a temporary file (stopping at 50 MB), creates an `UploadedFile` row with status `PENDING`, and returns `202`.
 2. A FastAPI background task then sets the status to `PROCESSING` and calls `read_features`:
@@ -274,11 +202,7 @@ sequenceDiagram
 cd backend && uv run pytest
 ```
 
-- Unit tests cover the UTM zone formula, area and length against geodesic references, the Web Mercator trap, features in different zones, multipolygons, and invalid or unsupported geometries.
-- Reader tests cover multi-folder KML, projected Shapefiles, a missing `.prj`, two `.shp` files in one zip, and corrupt files.
-- API tests run against a real PostGIS database and cover the full flow, pagination, error statuses, and agreement with PostGIS `ST_Area(geography)`.
-
-GitHub Actions runs `ruff` and `pytest` against a PostGIS service container, then lints and builds the frontend.
+The tests cover the UTM zone formula, areas and lengths against geodesic references, the Web Mercator trap, invalid and unsupported geometries, multi-folder KML, missing `.prj` files, corrupt uploads, and the full API flow against a real PostGIS database. GitHub Actions runs `ruff` and `pytest` on every push, then lints and builds the frontend.
 
 ## How I used AI
 
@@ -287,6 +211,7 @@ I built this project with Claude (Anthropic) as a pair programmer and tutor.
 - **Design.** Before writing any code, Claude questioned me on each design choice, and we settled them together: PostgreSQL with PostGIS instead of SQLite, measuring each feature in its own UTM zone, rejecting Shapefiles without a `.prj`, background processing, Docker Compose, and a small frontend so reviewers can try it.
 - **Learning.** I started with no GIS, FastAPI or pytest experience. Claude wrote short lessons with quizzes alongside the code. They cover features and CRSs, why degrees can't be measured, reading KML and Shapefiles, and pytest.
 - **Code.** Claude drafted much of the implementation and the tests. I reviewed every change, ran it, modified parts of it, and made each commit myself.
+- **README.** Claude wrote most of this README. I wrote some sections myself and used Claude to format them.
 - **Checking.** The numbers aren't taken on trust. The tests compare the results against two independent references, `pyproj.Geod` and PostGIS `ST_Area(geography)`.
 
 I can explain any part of the code and the reasons behind it.
