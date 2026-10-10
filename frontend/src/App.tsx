@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FeatureCollection } from 'geojson'
 import { GeoJSON, MapContainer, TileLayer, useMap } from 'react-leaflet'
-import { geoJSON } from 'leaflet'
+import { circleMarker, geoJSON, type PathOptions } from 'leaflet'
 import {
   getFeatures,
   getFile,
@@ -15,6 +15,10 @@ const SAMPLES = [
   { file: 'bengaluru-site.kml', label: 'KML: polygon, line, point' },
   { file: 'bellary-pits-utm43n.zip', label: 'Shapefile in UTM 43N' },
 ]
+
+// The OSM basemap is light in both themes, so the highlight is one fixed colour that stands out
+// against its greens, blues and beiges.
+const HIGHLIGHT: PathOptions = { color: '#d9480f', weight: 3, fillColor: '#d9480f', fillOpacity: 0.35 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const fmt = (value: number | null, digits: number) =>
@@ -171,7 +175,12 @@ export default function App() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <GeoJSON data={features} style={{ color: getComputedStyle(document.documentElement).getPropertyValue('--feature'), weight: 2, fillOpacity: 0.12 }} />
+          <GeoJSON
+            data={features}
+            style={HIGHLIGHT}
+            // Circles instead of Leaflet's default pin images, which Vite builds don't bundle.
+            pointToLayer={(_, latlng) => circleMarker(latlng, { ...HIGHLIGHT, radius: 7 })}
+          />
           <FitBounds data={features} />
         </MapContainer>
       )}
