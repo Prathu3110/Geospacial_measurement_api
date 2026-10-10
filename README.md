@@ -4,9 +4,9 @@ A FastAPI service that accepts a KML file or a zipped Shapefile, extracts every 
 
 A small web page is included for trying it out (not required by the brief; the API is the deliverable). Upload a file or one of two samples, see each feature on a map with totals in ha, km² and km, and click a shape to jump to its row in the measurements table.
 
-<!-- TODO(Prathu): add a screenshot, e.g. ![Web page after uploading the KML sample](docs/screenshot.png) -->
+**Live demo:** https://geomeasure-web.onrender.com (free hosting: the first request after 15 idle minutes takes about a minute while the server wakes up).
 
-**Live demo:** <!-- TODO: add the Render URL --> (free hosting: the first request after 15 idle minutes takes about a minute while the server wakes up).
+![Web page after uploading the Shapefile sample: two pits measured at 100 ha and 10 ha, drawn on the map, with the measurements table below](docs/screenshot.png)
 
 ## Setup
 
@@ -218,7 +218,11 @@ I can explain any part of the code and the reasons behind it.
 
 ## Learnings
 
-<!-- TODO(Prathu): write this section yourself. -->
+Before this project I had never worked with geospatial files. The biggest lesson was that you can't measure in degrees: a degree of longitude gets shorter the further you are from the equator, so shapes have to be projected into metres (UTM here) before measuring. I also learned how messy real files are. A Shapefile is really four files, KML folders show up as separate layers, and without a `.prj` file you can't trust the numbers at all.
+
+I knew backend concepts but hadn't used FastAPI much. Type hints that give you validation and API docs for free made the endpoints quick to write, and background tasks were a simple way to keep uploads responsive.
+
+PostGIS and the Python geospatial libraries (GeoPandas, Shapely, pyproj, GDAL) were all new to me. Seeing PostGIS calculate the same area on the ellipsoid as my code was a satisfying way to check the maths.
 
 ## Future scope
 
