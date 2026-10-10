@@ -13,8 +13,8 @@ A small web page is included for trying it out (not required by the brief; the A
 You need Docker with Docker Compose.
 
 ```bash
-git clone https://github.com/Prathu3110/Geospacial_measurement_api.git
-cd Geospacial_measurement_api
+git clone https://github.com/Prathu3110/Geospatial_measurement_api.git
+cd Geospatial_measurement_api
 docker compose up --build
 ```
 

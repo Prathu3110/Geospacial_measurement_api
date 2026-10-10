@@ -12,7 +12,7 @@ import {
   type MeasurementPage,
 } from './api'
 
-const REPO_URL = 'https://github.com/Prathu3110/Geospacial_measurement_api'
+const REPO_URL = 'https://github.com/Prathu3110/Geospatial_measurement_api'
 
 const SAMPLES = [
   { file: 'sample-1.kml', title: 'Sample 1', detail: 'KML with a polygon, a line and a point' },
