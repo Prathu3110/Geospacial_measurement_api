@@ -275,15 +275,23 @@ cd backend && uv run pytest
 
 GitHub Actions runs `ruff` and `pytest` against a PostGIS service container, then lints and builds the frontend.
 
+## How I used AI
+
+I built this project with Claude (Anthropic) as a pair programmer and tutor.
+
+- **Design.** Before writing any code, Claude questioned me on each design choice, and we settled them together: PostgreSQL with PostGIS instead of SQLite, measuring each feature in its own UTM zone, rejecting Shapefiles without a `.prj`, background processing, Docker Compose, and a small frontend so reviewers can try it.
+- **Learning.** I started with no GIS, FastAPI or pytest experience. Claude wrote short lessons with quizzes alongside the code. They cover features and CRSs, why degrees can't be measured, reading KML and Shapefiles, and pytest.
+- **Code.** Claude drafted much of the implementation and the tests. I reviewed every change, ran it, modified parts of it, and made each commit myself.
+- **Checking.** The numbers aren't taken on trust. The tests compare the results against two independent references, `pyproj.Geod` and PostGIS `ST_Area(geography)`.
+
+I can explain any part of the code and the reasons behind it.
+
 ## Learnings
 
 <!-- TODO(Prathu): write this section yourself. -->
 
 ## Future scope
 
-- A job queue (RQ or Celery) with retries, and a sweep for files stuck in `PROCESSING`.
-- Support for KMZ, GeoJSON and GeoPackage uploads. GDAL already reads them, so mostly validation and tests are needed.
-- Perimeter for polygons, and optional 3D length that uses altitude.
-- Special cases the UTM choice doesn't cover: features that cross the antimeridian, very large features spanning several zones (geodesic area would suit them better), and the Norway and Svalbard zone exceptions.
-- Authentication, per-user files, and deleting uploads.
-- A spatial index and bounding-box filtering on `/features/` for very large files.
+- A job queue (RQ or Celery) with retries, so a server restart can't leave a file stuck in `PROCESSING`.
+- More upload formats: KMZ, GeoJSON and GeoPackage. GDAL already reads them, so the work is mostly validation and tests.
+- Special cases the per-feature UTM choice doesn't cover yet: features that cross the antimeridian, and very large features that span several zones, where geodesic area would suit them better.
